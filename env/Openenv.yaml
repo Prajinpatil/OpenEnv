@@ -1,0 +1,79 @@
+name: mail_pro_env
+version: "1.0.0"
+description: >
+  A multi-tier email classification and routing environment.
+  An agent processes a queue of emails and must correctly classify
+  or route each one to earn rewards.
+author: "OpenEnv User"
+license: MIT
+
+environment:
+  module: server.environment
+  class: MailEnv
+  models_module: models
+
+tasks:
+  - id: easy
+    name: "Spam Filter"
+    description: >
+      Classify each incoming email as either 'Spam' or 'Ham'.
+      Spam = unsolicited, deceptive, or promotional junk mail.
+      Ham  = legitimate, expected communication.
+    tier: easy
+    reward:
+      correct: 1.0
+      incorrect: 0.0
+    action_space:
+      label:
+        type: string
+        enum: [Spam, Ham]
+
+  - id: medium
+    name: "Priority Sorting"
+    description: >
+      All emails in this task are legitimate (Ham).
+      Classify the urgency level as 'High', 'Medium', or 'Low'.
+      High   = immediate action required or significant business impact.
+      Medium = action needed within 1-5 business days.
+      Low    = informational or social; no action required.
+    tier: medium
+    reward:
+      correct: 1.0
+      incorrect: 0.0
+    action_space:
+      label:
+        type: string
+        enum: [High, Medium, Low]
+
+  - id: hard
+    name: "Department Routing"
+    description: >
+      Route each email to the correct internal department AND provide a priority estimate.
+      Departments: HR, Tech_Support, Billing, Legal, Sales.
+      Priority:    High, Medium, Low.
+      Partial rewards are awarded — correct department earns +1.0,
+      correct priority earns an additional +0.5 (max 1.5 per email).
+    tier: hard
+    reward:
+      correct_department: 1.0
+      correct_priority: 0.5
+      incorrect: 0.0
+    action_space:
+      label:
+        type: string
+        enum: [HR, Tech_Support, Billing, Legal, Sales]
+      priority:
+        type: string
+        enum: [High, Medium, Low]
+        required: false
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  reload: false
+
+evaluation:
+  metric: overall_score        # from Grader.final_report()
+  higher_is_better: true
+  baseline_score: 0.33         # random baseline
+  target_score: 0.85
